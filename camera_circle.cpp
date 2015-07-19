@@ -89,7 +89,7 @@ void addButtons() {
 	buttons.push_back(Button(320, 390, 25, "C"));		
 
 	buttons.push_back(Button(100, 445, 25, "0"));
-	buttons.push_back(Button(155, 445, 25, "."));
+	buttons.push_back(Button(155, 445, 25, ","));
 	buttons.push_back(Button(210, 445, 25, "="));	
 	buttons.push_back(Button(265, 445, 25, "+"));
 	buttons.push_back(Button(320, 445, 25, "Q"));		
@@ -196,12 +196,91 @@ void *findCircle(void *arg) {
 	return NULL;
 }
 
+bool invalidExpr;
+int idxParser;
+
+double parseFactor() {
+
+	double result = 0, afterPoint = 10.;
+	bool pointFound = false, neg = false;
+
+	if (expression[idxParser] == '-') {
+		neg = true;
+	}
+
+	while (idxParser < expression.length()) {
+		if (expression[idxParser] == ',' && !pointFound) {
+			pointFound = true;
+		} else if (expression[idxParser] >= '0' && expression[idxParser] <= '9') {
+			if (!pointFound) {
+				result += result * 10 + (expression[idxParser] - '0');
+			} else {
+				result += (expression[idxParser] - '0') / afterPoint;
+				afterPoint *= 10.;
+			}
+		} else {
+			break;
+		}
+		idxParser++;
+	}
+
+	if (neg) result *= -1.;
+
+	return result;
+}
+
+double parseTerm() {
+
+	double result;
+	result = parseFactor();
+
+	while (idxParser < expression.length() && !invalidExpr) {
+		if (expression[idxParser] == '/') {
+			idxParser++;
+			result /= parseFactor();
+		} else if (expression[idxParser] == '*') {
+			idxParser++;
+			result *= parseFactor();
+		} else {
+			break;
+		}
+	}
+
+	return result;
+}
+
+double parseExpr() {
+
+	double term;
+	invalidExpr = false;
+	idxParser = 0;
+
+	term = parseTerm();
+
+	while (idxParser < expression.length() && !invalidExpr) {
+		if (expression[idxParser] == '+') {
+			idxParser++;
+			term += parseTerm();
+		} else if (expression[idxParser] == '-') {
+			idxParser++;
+			term -= parseTerm();
+		} else {
+			std::cerr << "Expected + or - => " <<  expression[idxParser] << std::endl;
+			invalidExpr = true;
+			break;
+		}
+	}
+
+	return term;
+
+}
+
 void buildExpression() {
 
 	if (event[0] >= '0' && event[0] <= '9' ||
 		event[0] == '+' ||
 		event[0] == '-' ||
-		event[0] == '.' ||
+		event[0] == ',' ||
 		event[0] == '/' ||
 		event[0] == '*'		
 		) {
@@ -211,6 +290,26 @@ void buildExpression() {
 		}
 
 		expression += std::string(event);
+
+	} else if (event[0] == '=') {
+		char strBuf[200];
+		double val;
+
+		val = parseExpr();
+
+		if (!invalidExpr) {
+			sprintf(strBuf, "%.2f", val);
+			expression = std::string(strBuf);
+		} else {
+			std::cerr << "Invalid expression!" << std::endl;
+			expression = std::string("0");
+		}
+	} else if (event == std::string("C") || event == std::string("CE")) {
+		expression = std::string("0");
+	} else if (event == std::string("D")) {
+		expression = expression.substr(0, expression.length() - 1);
+	} else if (event == std::string("Q")) {
+		exit(EXIT_SUCCESS);
 	}
 
 }
