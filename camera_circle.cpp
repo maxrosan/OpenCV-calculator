@@ -2,7 +2,6 @@
 #include <iostream>
 #include <cstdlib>
 #include <memory.h>
-#include <fftw3.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -315,6 +314,11 @@ void buildExpression() {
 }
 
 int main(int argc, char **argv) {
+
+	if (argc == 2 && strcmp(argv[1], "--version") == 0) {
+		std::cout << "OPENCV " << CV_MAJOR_VERSION << " " << CV_MINOR_VERSION << "\n";
+		return EXIT_SUCCESS;
+	}
 
 	cv::VideoCapture cap (0);
 
