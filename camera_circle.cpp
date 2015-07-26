@@ -316,6 +316,11 @@ void buildExpression() {
 
 int main(int argc, char **argv) {
 
+	if (argc == 2 && strcmp(argv[1], "--version") == 0) {
+		std::cout << "OPENCV " << CV_MAJOR_VERSION << " " << CV_MINOR_VERSION << "\n";
+		return EXIT_SUCCESS;
+	}
+
 	cv::VideoCapture cap (0);
 
 	int a, b, r, d;
